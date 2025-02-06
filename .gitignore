@@ -1,0 +1,35 @@
+# .NET
+bin/
+obj/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+.vs/
+*.sln.ide
+*.sln.ide.*
+*.sln.ide.*.user
+*.sln.ide.*.suo
+
+# Rider
+.idea/
+*.sln.iml
+
+# ASP.NET
+wwwroot/
+node_modules/
+dist/
+.env
+
+# Remix.run
+/build/
+.cache/
+node_modules/
+.env
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
