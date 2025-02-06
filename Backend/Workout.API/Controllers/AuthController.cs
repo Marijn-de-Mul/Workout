@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using System.Linq;
 using Workout.SAL.Services.Interfaces;
 using Workout.SAL.Models;
 
@@ -45,11 +47,27 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> Me()
     {
-        var user = await _authService.GetCurrentUser();
+        var user = HttpContext.Items["User"] as dynamic;
         if (user == null)
         {
             return Unauthorized();
         }
-        return Ok(user);
+
+        var userId = user.Id;
+        var userInfo = await _authService.GetUserById(userId);
+        if (userInfo == null)
+        {
+            return NotFound();
+        }
+
+        var userResponse = new User
+        {
+            Id = userInfo.Id,
+            Username = userInfo.Username,
+            Email = userInfo.Email,
+            Password = null
+        };
+
+        return Ok(userResponse);
     }
 }

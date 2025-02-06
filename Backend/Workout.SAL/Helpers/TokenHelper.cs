@@ -1,6 +1,45 @@
-﻿namespace Workout.SAL.Helpers;
+﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
-public class TokenHelper
+namespace Workout.SAL.Helpers
 {
-    
+    public class TokenHelper
+    {
+        private readonly string _secretKey;
+
+        public TokenHelper(string secretKey)
+        {
+            _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey));
+        }
+
+        public string GenerateToken(string userId, string userName, string userEmail)
+        {
+            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException(nameof(userId));
+            if (string.IsNullOrEmpty(userName)) throw new ArgumentNullException(nameof(userName));
+            if (string.IsNullOrEmpty(userEmail)) throw new ArgumentNullException(nameof(userEmail));
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
+                new Claim(JwtRegisteredClaimNames.Email, userEmail)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "Workout",
+                audience: "Workout-User",
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+    }
 }
