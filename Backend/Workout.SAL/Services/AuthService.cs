@@ -59,7 +59,7 @@ public class AuthService : IAuthService
         return _tokenHelper.GenerateToken(newUser.Id, newUser.Username, newUser.Email);
     }
 
-    public async Task<User> GetUserById(string userId)
+    public async Task<User> GetUserById(int userId)
     {
         return await _authRepository.GetUserById(userId);
     }

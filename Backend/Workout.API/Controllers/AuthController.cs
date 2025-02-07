@@ -53,7 +53,11 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var userId = user.Id;
+        if (!int.TryParse(user.Id.ToString(), out int userId))
+        {
+            return BadRequest("Invalid user ID.");
+        }
+
         var userInfo = await _authService.GetUserById(userId);
         if (userInfo == null)
         {

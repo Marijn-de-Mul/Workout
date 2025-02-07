@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Workout.DAL.Repositories.Interfaces;
 using Workout.SAL.Models;
 
@@ -11,52 +7,28 @@ namespace Workout.DAL.Repositories
 {
     public class AuthRepository : IAuthRepository
     {
-        private const string FilePath = "users.json";
-        private List<User> _users;
+        private readonly ApplicationDbContext _context;
 
-        public AuthRepository()
+        public AuthRepository(ApplicationDbContext context)
         {
-            if (File.Exists(FilePath))
-            {
-                var jsonData = File.ReadAllText(FilePath);
-                if (string.IsNullOrWhiteSpace(jsonData))
-                {
-                    _users = new List<User>();
-                }
-                else
-                {
-                    _users = JsonSerializer.Deserialize<List<User>>(jsonData) ?? new List<User>();
-                }
-            }
-            else
-            {
-                _users = new List<User>();
-            }
+            _context = context;
         }
 
-        public Task<User> GetUserByEmail(string email)
+        public async Task<User> GetUserByEmail(string email)
         {
-            var user = _users.FirstOrDefault(u => u.Email == email);
-            return Task.FromResult(user);
-        }
-        
-        public async Task<User> GetUserById(string userId)
-        {
-            return await Task.FromResult(_users.FirstOrDefault(u => u.Id == userId));
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public Task<User> CreateUser(User user)
+        public async Task<User> GetUserById(int userId)
         {
-            user.Id = (_users.Count + 1).ToString();
-            _users.Add(user);
-            SaveChanges();
-            return Task.FromResult(user);
+            return await _context.Users.FindAsync(userId);
         }
 
-        private void SaveChanges()
+        public async Task<User> CreateUser(User user)
         {
-            var jsonData = JsonSerializer.Serialize(_users);
-            File.WriteAllText(FilePath, jsonData);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return user;
         }
     }
 }

@@ -16,15 +16,15 @@ namespace Workout.SAL.Helpers
             _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey));
         }
 
-        public string GenerateToken(string userId, string userName, string userEmail)
+        public string GenerateToken(int userId, string userName, string userEmail)
         {
-            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException(nameof(userId));
+            if (userId <= 0) throw new ArgumentNullException(nameof(userId));
             if (string.IsNullOrEmpty(userName)) throw new ArgumentNullException(nameof(userName));
             if (string.IsNullOrEmpty(userEmail)) throw new ArgumentNullException(nameof(userEmail));
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, userName),
                 new Claim(JwtRegisteredClaimNames.Email, userEmail)
             };
