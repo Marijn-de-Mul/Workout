@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Workout.DAL;
 using Workout.DAL.Repositories;
 using Workout.DAL.Repositories.Interfaces;
 using Workout.SAL.Helpers;
@@ -41,6 +43,10 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
 builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
 var app = builder.Build();
 

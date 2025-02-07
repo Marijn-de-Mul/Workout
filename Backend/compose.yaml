@@ -1,0 +1,18 @@
+﻿version: '3.8'
+
+services:
+  workout_db:
+    image: mysql:8.0
+    container_name: workout_db
+    environment:
+      MYSQL_ROOT_PASSWORD: workout
+      MYSQL_DATABASE: workout
+      MYSQL_USER: workout
+      MYSQL_PASSWORD: workout
+    ports:
+      - "4306:3306"
+    volumes:
+      - workout_db_data:/var/lib/mysql
+
+volumes:
+  workout_db_data:
