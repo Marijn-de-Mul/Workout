@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import ProtectedRoute from '../ProtectedRoute';
+import Loader from '../Loader';
 
 const AccountInformation = () => {
   const [accountInfo, setAccountInfo] = useState(null);
@@ -48,7 +49,7 @@ const AccountInformation = () => {
   }
 
   if (!accountInfo) {
-    return <p style={{ textAlign: 'center' }}>Loading...</p>;
+    return <Loader />;
   }
 
   return (
@@ -56,13 +57,10 @@ const AccountInformation = () => {
       <div style={{ padding: '16px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', width: '100%' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '16px', color: 'green' }}>Account</h2>
         <div style={{ marginBottom: '8px', color: 'black' }}>
-          <p style={{ margin: 0 }}><strong>Name:</strong> {accountInfo.name}</p>
+          <p style={{ margin: 0 }}><strong>Name:</strong> {accountInfo.username}</p>
         </div>
         <div style={{ marginBottom: '8px', color: 'black' }}>
           <p style={{ margin: 0 }}><strong>Email:</strong> {accountInfo.email}</p>
-        </div>
-        <div style={{ marginBottom: '8px', color: 'black' }}>
-          <p style={{ margin: 0 }}><strong>Joined:</strong> {new Date(accountInfo.joined).toLocaleDateString()}</p>
         </div>
         <button onClick={handleLogout} style={{ backgroundColor: 'red', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '16px' }}>
           Logout
