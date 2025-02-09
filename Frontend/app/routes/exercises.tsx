@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Cookies from 'js-cookie';
 import MobileNavbar from './components/MobileNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import ExerciseDetails from './components/exercises/ExerciseDetails';
+
+const ExerciseSettings = React.lazy(() => import('./components/settings/ExercisesSettings'));
 
 const Exercises = () => {
   const [exercises, setExercises] = useState([]);
   const [routines, setRoutines] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [newExercise, setNewExercise] = useState({ name: '', description: '', routineId: '', categoryId: '' });
+  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -67,210 +70,90 @@ const Exercises = () => {
       }
     };
 
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: '/api/Category',
-            method: 'GET',
-            authorization: Cookies.get('authToken'),
-            body: null,
-            contentType: 'application/json',
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const categories = data.$values ? data.$values.filter(category => category.type === 'Exercise') : [];
-          setCategories(categories);
-        } else {
-          setError('Failed to fetch categories.');
-        }
-      } catch (error) {
-        setError('Failed to fetch categories.');
-      }
-    };
-
     fetchExercises();
     fetchRoutines();
-    fetchCategories();
   }, []);
 
-  const handleAddExercise = async (event) => {
-    event.preventDefault();
-
-    const exerciseToAdd = {
-      name: newExercise.name,
-      description: newExercise.description,
-      routineId: parseInt(newExercise.routineId),
-      categoryId: parseInt(newExercise.categoryId),
-    };
-
-    try {
-      const response = await fetch('/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          endpoint: '/api/Exercise',
-          method: 'POST',
-          authorization: Cookies.get('authToken'),
-          body: exerciseToAdd,
-          contentType: 'application/json',
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setExercises([...exercises, data]);
-        setNewExercise({ name: '', description: '', routineId: '', categoryId: '' });
-      } else {
-        setError('Failed to add exercise.');
-      }
-    } catch (error) {
-      setError('Failed to add exercise.');
-    }
+  const handleExerciseClick = (exercise) => {
+    setSelectedExercise(exercise);
   };
 
-  const handleDeleteExercise = async (id) => {
-    try {
-      const response = await fetch('/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          endpoint: `/api/Exercise/${id}`,
-          method: 'DELETE',
-          authorization: Cookies.get('authToken'),
-          body: null,
-          contentType: 'application/json',
-        }),
-      });
+  const handleBackClick = () => {
+    setSelectedExercise(null);
+  };
 
-      if (response.ok) {
-        setExercises(exercises.filter((exercise) => exercise.id !== id));
-      } else {
-        setError('Failed to delete exercise.');
-      }
-    } catch (error) {
-      setError('Failed to delete exercise.');
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleEditBackClick = () => {
+    setIsEditing(false);
+  };
+
+  const renderContent = () => {
+    if (isEditing) {
+      return <ExerciseSettings />;
+    } else if (selectedExercise) {
+      const routine = routines.find(routine => routine.id === selectedExercise.routineId);
+      return <ExerciseDetails exercise={selectedExercise} routine={routine} error={error} />;
+    } else {
+      return (
+        <>
+          <div style={{ position: 'sticky', top: 0, backgroundColor: '#f9f9f9', zIndex: 1, paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h1 style={{ textAlign: 'center', marginBottom: '16px', color: 'green', marginRight: '60vw' }}>
+                Exercises
+              </h1>
+              <button onClick={handleEditClick} style={{ padding: '8px 16px', backgroundColor: 'blue', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                Edit
+              </button>
+            </div>
+          </div>
+
+          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {exercises.map((exercise) => (
+              <div
+                key={exercise.id}
+                onClick={() => handleExerciseClick(exercise)}
+                style={{
+                  textAlign: 'center',
+                  marginBottom: '16px',
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  width: '90%',
+                  margin: '0 auto',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  cursor: 'pointer',
+                }}
+              >
+                <h2 style={{ color: 'green' }}>{exercise.name}</h2>
+                <p style={{ color: '#7D7D7D' }}>{exercise.description}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      );
     }
   };
 
   return (
     <ProtectedRoute>
-      <div
-        style={{
-          maxWidth: '400px',
-          margin: '0 auto',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          justifyContent: 'space-between',
-          backgroundColor: '#f9f9f9',
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            paddingBottom: '60px',
-          }}
-        >
-          <h1 style={{ textAlign: 'center', marginBottom: '16px', color: 'green' }}>
-            Exercises
-          </h1>
-          <p style={{ textAlign: 'center', color: '#7D7D7D', marginBottom: '32px' }}>
-            Your exercise routines and details...
-          </p>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#f9f9f9' }}>
+        {(isEditing || selectedExercise) && (
+          <button onClick={isEditing ? handleEditBackClick : handleBackClick} style={{ position: 'absolute', top: '16px', left: '16px', background: 'none', border: 'none', color: 'green' }}>
+            <svg width="24px" height="24px" viewBox="-5.5 0 26 26" xmlns="http://www.w3.org/2000/svg">
+              <path d="M428.115,1209 L437.371,1200.6 C438.202,1199.77 438.202,1198.43 437.371,1197.6 C436.541,1196.76 435.194,1196.76 434.363,1197.6 L423.596,1207.36 C423.146,1207.81 422.948,1208.41 422.985,1209 C422.948,1209.59 423.146,1210.19 423.596,1210.64 L434.363,1220.4 C435.194,1221.24 436.541,1221.24 437.371,1220.4 C438.202,1219.57 438.202,1218.23 437.371,1217.4 L428.115,1209" fill="#000000"/>
+            </svg>
+            Back
+          </button>
+        )}
 
-          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-
-          <form onSubmit={handleAddExercise} style={{ marginBottom: '16px' }}>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Name:</label>
-              <input
-                type="text"
-                placeholder="Enter exercise name"
-                value={newExercise.name}
-                onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              />
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Description:</label>
-              <input
-                type="text"
-                placeholder="Enter exercise description"
-                value={newExercise.description}
-                onChange={(e) => setNewExercise({ ...newExercise, description: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              />
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Routine:</label>
-              <select
-                value={newExercise.routineId}
-                onChange={(e) => setNewExercise({ ...newExercise, routineId: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              >
-                <option value="" disabled>Select a routine</option>
-                {routines.map((routine) => (
-                  <option key={routine.id} value={routine.id}>{routine.name}</option>
-                ))}
-              </select>
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Category:</label>
-              <select
-                value={newExercise.categoryId}
-                onChange={(e) => setNewExercise({ ...newExercise, categoryId: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              >
-                <option value="" disabled>Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" style={{ padding: '10px 20px', backgroundColor: 'green', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Add Exercise
-            </button>
-          </form>
-
-          {exercises.map((exercise) => (
-            <div
-              key={exercise.id}
-              style={{
-                textAlign: 'center',
-                marginBottom: '16px',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '12px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <h2 style={{ color: 'green' }}>{exercise.name}</h2>
-              <p style={{ color: '#7D7D7D' }}>{exercise.description}</p>
-              <button onClick={() => handleDeleteExercise(exercise.id)} style={{ backgroundColor: 'red', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          {renderContent()}
+        </Suspense>
 
         <MobileNavbar />
       </div>

@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Cookies from 'js-cookie';
 import MobileNavbar from './components/MobileNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
+const ExerciseList = React.lazy(() => import('./components/routines/ExerciseList'));
+const RoutineSettings = React.lazy(() => import('./components/settings/RoutinesSettings'));
+
 const Routines = () => {
   const [routines, setRoutines] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [newRoutine, setNewRoutine] = useState({ name: '', description: '', categoryId: '' });
+  const [selectedRoutine, setSelectedRoutine] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -38,194 +41,86 @@ const Routines = () => {
       }
     };
 
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: '/api/Category',
-            method: 'GET',
-            authorization: Cookies.get('authToken'),
-            body: null,
-            contentType: 'application/json',
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const categories = data.$values ? data.$values.filter(category => category.type === 'Routine') : [];
-          setCategories(categories);
-        } else {
-          setError('Failed to fetch categories.');
-        }
-      } catch (error) {
-        setError('Failed to fetch categories.');
-      }
-    };
-
     fetchRoutines();
-    fetchCategories();
   }, []);
 
-  const handleAddRoutine = async (event) => {
-    event.preventDefault();
-
-    const routineToAdd = {
-      name: newRoutine.name,
-      description: newRoutine.description,
-      categoryId: parseInt(newRoutine.categoryId),
-    };
-
-    try {
-      const response = await fetch('/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          endpoint: '/api/Routine',
-          method: 'POST',
-          authorization: Cookies.get('authToken'),
-          body: routineToAdd,
-          contentType: 'application/json',
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRoutines([...routines, data]);
-        setNewRoutine({ name: '', description: '', categoryId: '' });
-      } else {
-        setError('Failed to add routine.');
-      }
-    } catch (error) {
-      setError('Failed to add routine.');
-    }
+  const handleRoutineClick = (routine) => {
+    setSelectedRoutine(routine);
   };
 
-  const handleDeleteRoutine = async (id) => {
-    try {
-      const response = await fetch('/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          endpoint: `/api/Routine/${id}`,
-          method: 'DELETE',
-          authorization: Cookies.get('authToken'),
-          body: null,
-          contentType: 'application/json',
-        }),
-      });
+  const handleBackClick = () => {
+    setSelectedRoutine(null);
+  };
 
-      if (response.ok) {
-        setRoutines(routines.filter((routine) => routine.id !== id));
-      } else {
-        setError('Failed to delete routine.');
-      }
-    } catch (error) {
-      setError('Failed to delete routine.');
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleEditBackClick = () => {
+    setIsEditing(false);
+  };
+
+  const renderContent = () => {
+    if (isEditing) {
+      return <RoutineSettings />;
+    } else if (selectedRoutine) {
+      return <ExerciseList routine={selectedRoutine} />;
+    } else {
+      return (
+        <>
+          <div style={{ position: 'sticky', top: 0, backgroundColor: '#f9f9f9', zIndex: 1, paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h1 style={{ textAlign: 'center', marginBottom: '16px', color: 'green', marginRight: '60vw' }}>
+                Routines
+              </h1>
+              <button onClick={handleEditClick} style={{ padding: '8px 16px', backgroundColor: 'blue', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                Edit
+              </button>
+            </div>
+          </div>
+
+          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {routines.map((routine) => (
+              <div
+                key={routine.id}
+                onClick={() => handleRoutineClick(routine)}
+                style={{
+                  textAlign: 'center',
+                  marginBottom: '16px',
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  cursor: 'pointer',
+                }}
+              >
+                <h2 style={{ color: 'green' }}>{routine.name}</h2>
+                <p style={{ color: '#7D7D7D' }}>{routine.description}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      );
     }
   };
 
   return (
     <ProtectedRoute>
-      <div
-        style={{
-          maxWidth: '400px',
-          margin: '0 auto',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100vh',
-          justifyContent: 'space-between',
-          backgroundColor: '#f9f9f9',
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            paddingBottom: '60px',
-          }}
-        >
-          <h1 style={{ textAlign: 'center', marginBottom: '16px', color: 'green' }}>
-            Routines
-          </h1>
-          <p style={{ textAlign: 'center', color: '#7D7D7D', marginBottom: '32px' }}>
-            Your workout routines and schedules...
-          </p>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#f9f9f9' }}>
+        {(isEditing || selectedRoutine) && (
+          <button onClick={isEditing ? handleEditBackClick : handleBackClick} style={{ position: 'absolute', top: '16px', left: '16px', background: 'none', border: 'none', color: 'green' }}>
+            <svg width="24px" height="24px" viewBox="-5.5 0 26 26" xmlns="http://www.w3.org/2000/svg">
+              <path d="M428.115,1209 L437.371,1200.6 C438.202,1199.77 438.202,1198.43 437.371,1197.6 C436.541,1196.76 435.194,1196.76 434.363,1197.6 L423.596,1207.36 C423.146,1207.81 422.948,1208.41 422.985,1209 C422.948,1209.59 423.146,1210.19 423.596,1210.64 L434.363,1220.4 C435.194,1221.24 436.541,1221.24 437.371,1220.4 C438.202,1219.57 438.202,1218.23 437.371,1217.4 L428.115,1209" fill="#000000"/>
+            </svg>
+            Back
+          </button>
+        )}
 
-          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-
-          <form onSubmit={handleAddRoutine} style={{ marginBottom: '16px' }}>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Name:</label>
-              <input
-                type="text"
-                placeholder="Enter routine name"
-                value={newRoutine.name}
-                onChange={(e) => setNewRoutine({ ...newRoutine, name: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              />
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Description:</label>
-              <input
-                type="text"
-                placeholder="Enter routine description"
-                value={newRoutine.description}
-                onChange={(e) => setNewRoutine({ ...newRoutine, description: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              />
-            </div>
-            <div style={{ marginBottom: '8px' }}>
-              <label style={{ display: 'block', marginBottom: '4px', color: 'black' }}>Category:</label>
-              <select
-                value={newRoutine.categoryId}
-                onChange={(e) => setNewRoutine({ ...newRoutine, categoryId: e.target.value })}
-                required
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: 'black', backgroundColor: 'white' }}
-              >
-                <option value="" disabled>Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" style={{ padding: '10px 20px', backgroundColor: 'green', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Add Routine
-            </button>
-          </form>
-
-          {routines.map((routine) => (
-            <div
-              key={routine.id}
-              style={{
-                textAlign: 'center',
-                marginBottom: '16px',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '12px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <h2 style={{ color: 'green' }}>{routine.name}</h2>
-              <p style={{ color: '#7D7D7D' }}>{routine.description}</p>
-              <button onClick={() => handleDeleteRoutine(routine.id)} style={{ backgroundColor: 'red', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          {renderContent()}
+        </Suspense>
 
         <MobileNavbar />
       </div>
