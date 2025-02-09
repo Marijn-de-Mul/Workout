@@ -16,12 +16,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        const response = await fetch('https://localhost:7087/api/auth/me', {
-          method: 'GET',
+        const response = await fetch('/proxy', {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            endpoint: '/api/auth/me',
+            method: 'GET',
+            authorization: token,
+            body: null,
+            contentType: 'application/json',
+          }),
         });
 
         if (response.ok) {
@@ -38,7 +44,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <Loader />; 
+    return <Loader />;
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;

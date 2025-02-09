@@ -10,12 +10,18 @@ const Login = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch('https://localhost:7087/api/Auth/login', {
+    const response = await fetch('/proxy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        endpoint: '/api/Auth/login',
+        method: 'POST',
+        authorization: '',
+        body: { email, password },
+        contentType: 'application/json',
+      }),
     });
 
     if (response.ok) {
@@ -23,7 +29,7 @@ const Login = () => {
       setToken(data.token);
       Cookies.set('authToken', data.token);
       console.log('Login successful:', data);
-      window.location.href = '/'; 
+      window.location.href = '/';
     } else {
       console.error('Login failed');
     }

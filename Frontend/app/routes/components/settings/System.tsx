@@ -3,8 +3,18 @@ import React from 'react';
 const System = () => {
   const handleUpdate = async () => {
     try {
-      const response = await fetch('https://localhost:7087/api/update', {
+      const response = await fetch('/proxy', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint: '/api/update',
+          method: 'POST',
+          authorization: '',
+          body: null,
+          contentType: 'application/json',
+        }),
       });
       if (response.ok) {
         alert('Update initiated successfully');

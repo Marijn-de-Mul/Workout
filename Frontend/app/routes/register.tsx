@@ -12,12 +12,18 @@ const Register = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch('https://localhost:7087/api/Auth/register', {
+    const response = await fetch('/proxy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, email, password, confirmPassword }),
+      body: JSON.stringify({
+        endpoint: '/api/Auth/register',
+        method: 'POST',
+        authorization: '',
+        body: { username, email, password, confirmPassword },
+        contentType: 'application/json',
+      }),
     });
 
     if (response.ok) {
@@ -25,7 +31,7 @@ const Register = () => {
       setToken(data.token);
       Cookies.set('authToken', data.token);
       console.log('Registration successful:', data);
-      window.location.href = '/'; 
+      window.location.href = '/';
     } else {
       console.error('Registration failed');
     }
