@@ -50,6 +50,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 var app = builder.Build();
 
+ApplyMigrations(app);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -67,3 +69,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+void ApplyMigrations(IHost app)
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
