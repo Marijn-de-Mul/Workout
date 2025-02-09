@@ -1,5 +1,6 @@
 import { json, type ActionFunction } from "@remix-run/node";
 import fetch from "node-fetch";
+import http from "http";
 import https from "https";
 
 const BASE_URL = process.env.NODE_ENV === "production"
@@ -22,13 +23,17 @@ export const action: ActionFunction = async ({ request }) => {
     headers["Content-Type"] = "application/json";
   }
 
+  const agent = url.startsWith("https")
+    ? new https.Agent({
+        rejectUnauthorized: process.env.NODE_ENV !== "development",
+      })
+    : new http.Agent();
+
   const options: RequestInit = {
     method,
     headers,
     ...(method !== "GET" && method !== "HEAD" ? { body: JSON.stringify(body) } : {}),
-    agent: new https.Agent({
-      rejectUnauthorized: process.env.NODE_ENV !== "development",
-    }),
+    agent,
   };
 
   console.log("Proxy request to:", url);
