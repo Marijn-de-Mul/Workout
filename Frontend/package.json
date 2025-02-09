@@ -17,6 +17,7 @@
     "@remix-run/node": "^2.15.3",
     "@remix-run/react": "^2.15.3",
     "@remix-run/serve": "^2.15.3",
+    "@rollup/rollup-linux-x64-gnu": "^4.34.6",
     "@tabler/icons-react": "^3.30.0",
     "isbot": "^4.1.0",
     "js-cookie": "^3.0.5",
