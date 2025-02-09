@@ -3,8 +3,7 @@ import MobileNavbar from './components/MobileNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AccountInformation = React.lazy(() => import('./components/settings/AccountInformation'));
-const Appearance = React.lazy(() => import('./components/settings/Appearance'));
-const Preferences = React.lazy(() => import('./components/settings/Preferences'));
+const System = React.lazy(() => import('./components/settings/System'));
 
 const Settings = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -13,10 +12,8 @@ const Settings = () => {
     switch (selectedCategory) {
       case 'account':
         return <AccountInformation />;
-      case 'appearance':
-        return <Appearance />;
-      case 'preferences':
-        return <Preferences />;
+      case 'system':
+        return <System />;
       default:
         return null;
     }
@@ -46,16 +43,8 @@ const Settings = () => {
                 </div>
               </li>
               <li style={{ marginBottom: '16px', backgroundColor: '#f9f9f9', borderRadius: '8px', padding: '12px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-                <div onClick={() => setSelectedCategory('appearance')} style={{ textDecoration: 'none', color: 'green', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                  Appearance
-                  <svg width="24px" height="24px" viewBox="-5.5 0 26 26" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M428.115,1209 L437.371,1200.6 C438.202,1199.77 438.202,1198.43 437.371,1197.6 C436.541,1196.76 435.194,1196.76 434.363,1197.6 L423.596,1207.36 C423.146,1207.81 422.948,1208.41 422.985,1209 C422.948,1209.59 423.146,1210.19 423.596,1210.64 L434.363,1220.4 C435.194,1221.24 436.541,1221.24 437.371,1220.4 C438.202,1219.57 438.202,1218.23 437.371,1217.4 L428.115,1209" fill="#000000"/>
-                  </svg>
-                </div>
-              </li>
-              <li style={{ marginBottom: '16px', backgroundColor: '#f9f9f9', borderRadius: '8px', padding: '12px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
-                <div onClick={() => setSelectedCategory('preferences')} style={{ textDecoration: 'none', color: 'green', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                  Preferences
+                <div onClick={() => setSelectedCategory('system')} style={{ textDecoration: 'none', color: 'green', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                  System
                   <svg width="24px" height="24px" viewBox="-5.5 0 26 26" xmlns="http://www.w3.org/2000/svg">
                     <path d="M428.115,1209 L437.371,1200.6 C438.202,1199.77 438.202,1198.43 437.371,1197.6 C436.541,1196.76 435.194,1196.76 434.363,1197.6 L423.596,1207.36 C423.146,1207.81 422.948,1208.41 422.985,1209 C422.948,1209.59 423.146,1210.19 423.596,1210.64 L434.363,1220.4 C435.194,1221.24 436.541,1221.24 437.371,1220.4 C438.202,1219.57 438.202,1218.23 437.371,1217.4 L428.115,1209" fill="#000000"/>
                   </svg>
