@@ -28,7 +28,7 @@ jobs:
           context: ./Frontend
           file: ./Frontend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/workout.frontend:latest
 
       - name: Build and push backend image
         uses: docker/build-push-action@v4
@@ -36,4 +36,4 @@ jobs:
           context: ./Backend
           file: ./Backend/Workout.API/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/workout.backend:latest

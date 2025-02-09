@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   workout_db:
     image: mysql:8.0
     container_name: workout_db
@@ -15,7 +13,7 @@ services:
       - workout_db_data:/var/lib/mysql
 
   workout_backend:
-    image: marijndemul16/workout_backend:latest
+    image: marijndemul16/workout.backend:latest
     container_name: workout_backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -26,7 +24,7 @@ services:
       - workout_db
 
   workout_frontend:
-    image: marijndemul16/workout_frontend:latest
+    image: marijndemul16/workout.frontend:latest
     container_name: workout_frontend
     ports:
       - "3500:5173"
