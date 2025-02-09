@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 const RoutinesSettings = () => {
   const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState({ name: '', description: '', type: 'Routine', userId: '-1', routineCategories: [], exerciseCategories: [] });
+  const [newCategory, setNewCategory] = useState({ name: '', description: '', type: 'Routine' });
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const RoutinesSettings = () => {
       if (response.ok) {
         const data = await response.json();
         setCategories([...categories, data]);
-        setNewCategory({ name: '', description: '', type: 'Routine', userId: '-1', routineCategories: [], exerciseCategories: [] });
+        setNewCategory({ name: '', description: '', type: 'Routine' });
       } else {
         setError('Failed to add category.');
       }

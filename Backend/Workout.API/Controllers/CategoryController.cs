@@ -30,7 +30,7 @@ namespace Workout.API.Controllers
             
             return userId; 
         }
-
+        
         private async Task<IActionResult> HandleUnauthorizedAccessException(Func<Task<IActionResult>> action)
         {
             try
@@ -70,7 +70,7 @@ namespace Workout.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCategory([FromBody] Category category)
+        public async Task<IActionResult> CreateCategory([FromBody] CategoryRequest categoryRequest)
         {
             return await HandleUnauthorizedAccessException(async () =>
             {
@@ -80,19 +80,26 @@ namespace Workout.API.Controllers
                     return BadRequest(ModelState);
                 }
 
-                category.UserId = userId.ToString();
+                var category = new Category
+                {
+                    Name = categoryRequest.Name,
+                    Description = categoryRequest.Description,
+                    Type = categoryRequest.Type,
+                    UserId = userId.ToString()
+                };
+
                 await _categoryService.CreateCategory(category);
                 return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
             });
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category)
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryRequest categoryRequest)
         {
             return await HandleUnauthorizedAccessException(async () =>
             {
                 var userId = GetUserId();
-                if (id != category.Id || !ModelState.IsValid)
+                if (!ModelState.IsValid)
                 {
                     return BadRequest();
                 }
@@ -103,8 +110,11 @@ namespace Workout.API.Controllers
                     return NotFound();
                 }
 
-                category.UserId = userId.ToString();
-                await _categoryService.UpdateCategory(category);
+                existingCategory.Name = categoryRequest.Name;
+                existingCategory.Description = categoryRequest.Description;
+                existingCategory.Type = categoryRequest.Type;
+
+                await _categoryService.UpdateCategory(existingCategory);
                 return NoContent();
             });
         }
