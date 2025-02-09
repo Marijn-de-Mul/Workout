@@ -14,5 +14,24 @@ services:
     volumes:
       - workout_db_data:/var/lib/mysql
 
+  workout_backend:
+    build: ./Backend
+    container_name: workout_backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=workout_db;Database=workout;User=workout;Password=workout;
+    ports:
+      - "5000:80"
+    depends_on:
+      - workout_db
+
+  workout_frontend:
+    build: ./Frontend
+    container_name: workout_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - workout_backend
+
 volumes:
   workout_db_data:
