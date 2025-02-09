@@ -84,7 +84,8 @@ namespace Workout.API.Controllers
                 {
                     Name = exerciseRequest.Name,
                     Description = exerciseRequest.Description,
-                    UserId = userId.ToString()
+                    UserId = userId.ToString(), 
+                    RoutineId = exerciseRequest.RoutineId
                 };
 
                 await _exerciseService.CreateExercise(exercise, exerciseRequest.CategoryId);
