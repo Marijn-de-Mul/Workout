@@ -1,35 +1,21 @@
-FROM node:21-alpine AS build
+FROM node:20 AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm config set fetch-retry-mintimeout 20000
-RUN npm config set fetch-retry-maxtimeout 120000
+COPY package.json package-lock.json ./
 
 RUN npm install
-
-RUN rm -rf node_modules package-lock.json
-
-COPY package*.json ./
-RUN npm ci
 
 COPY . .
 
 RUN npm run build
 
-FROM node:21-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
-COPY --from=build /app/dist ./dist
+COPY --from=builder /app /app
 
-COPY package*.json ./
+EXPOSE 5173
 
-RUN npm ci --only=production
-
-COPY server.js .
-
-EXPOSE 3000
-
-CMD ["node", "server.js"]
+CMD ["npm", "run", "start"]
