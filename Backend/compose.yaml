@@ -10,28 +10,37 @@ services:
       MYSQL_USER: workout
       MYSQL_PASSWORD: workout
     ports:
-      - "4306:3306"
+      - "4406:3306"
     volumes:
       - workout_db_data:/var/lib/mysql
 
   workout_backend:
-    build: ./Backend
+    image: marijndemul16/workout_backend:latest
     container_name: workout_backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=workout_db;Database=workout;User=workout;Password=workout;
     ports:
-      - "5000:80"
+      - "7087:7087"
     depends_on:
       - workout_db
 
   workout_frontend:
-    build: ./Frontend
+    image: marijndemul16/workout_frontend:latest
     container_name: workout_frontend
     ports:
-      - "3000:3000"
+      - "3500:5173"
     depends_on:
       - workout_backend
+
+  workout_watchtower:
+    image: containrrr/watchtower
+    container_name: workout_watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
 
 volumes:
   workout_db_data:
