@@ -1,5 +1,6 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required
 from models import db, Exercise
 
 ns_exercise = Namespace('Exercise', description='Exercise operations')
@@ -14,11 +15,13 @@ exercise_model = ns_exercise.model('ExerciseRequest', {
 @ns_exercise.route('/')
 class ExerciseList(Resource):
     @ns_exercise.marshal_list_with(exercise_model)
+    @jwt_required()
     def get(self):
         exercises = Exercise.query.all()
         return exercises
 
     @ns_exercise.expect(exercise_model)
+    @jwt_required()
     def post(self):
         data = request.get_json()
         new_exercise = Exercise(name=data['name'], description=data['description'], routine_id=data['routineId'])
@@ -29,11 +32,13 @@ class ExerciseList(Resource):
 @ns_exercise.route('/<int:id>')
 class ExerciseById(Resource):
     @ns_exercise.marshal_with(exercise_model)
+    @jwt_required()
     def get(self, id):
         exercise = Exercise.query.get_or_404(id)
         return exercise
 
     @ns_exercise.expect(exercise_model)
+    @jwt_required()
     def put(self, id):
         data = request.get_json()
         exercise = Exercise.query.get_or_404(id)
@@ -43,6 +48,7 @@ class ExerciseById(Resource):
         db.session.commit()
         return {'message': 'Update exercise successful'}
 
+    @jwt_required()
     def delete(self, id):
         exercise = Exercise.query.get_or_404(id)
         db.session.delete(exercise)

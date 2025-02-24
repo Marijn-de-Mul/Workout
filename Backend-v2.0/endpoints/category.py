@@ -1,5 +1,6 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required
 from models import db, Category
 
 ns_category = Namespace('Category', description='Category operations')
@@ -13,11 +14,13 @@ category_model = ns_category.model('CategoryRequest', {
 @ns_category.route('/')
 class CategoryList(Resource):
     @ns_category.marshal_list_with(category_model)
+    @jwt_required()
     def get(self):
         categories = Category.query.all()
         return categories
 
     @ns_category.expect(category_model)
+    @jwt_required()
     def post(self):
         data = request.get_json()
         new_category = Category(name=data['name'], description=data['description'], type=data['type'])
@@ -28,11 +31,13 @@ class CategoryList(Resource):
 @ns_category.route('/<int:id>')
 class CategoryById(Resource):
     @ns_category.marshal_with(category_model)
+    @jwt_required()
     def get(self, id):
         category = Category.query.get_or_404(id)
         return category
 
     @ns_category.expect(category_model)
+    @jwt_required()
     def put(self, id):
         data = request.get_json()
         category = Category.query.get_or_404(id)
@@ -42,6 +47,7 @@ class CategoryById(Resource):
         db.session.commit()
         return {'message': 'Update category successful'}
 
+    @jwt_required()
     def delete(self, id):
         category = Category.query.get_or_404(id)
         db.session.delete(category)

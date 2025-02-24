@@ -1,6 +1,7 @@
-from flask import request
+from flask import request, jsonify
 from flask_restx import Namespace, Resource, fields
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import db, User
 
 ns_auth = Namespace('Auth', description='Authentication operations')
@@ -24,7 +25,8 @@ class Login(Resource):
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
         if user and check_password_hash(user.password, data['password']):
-            return {'message': 'Login successful'}
+            access_token = create_access_token(identity=user.id)
+            return {'message': 'Login successful', 'access_token': access_token}
         return {'message': 'Invalid credentials'}, 401
 
 @ns_auth.route('/register')
@@ -42,6 +44,8 @@ class Register(Resource):
 
 @ns_auth.route('/me')
 class GetMe(Resource):
+    @jwt_required()
     def get(self):
-        # Implement get me logic here
-        return {'message': 'Get me successful'}
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        return {'username': user.username, 'email': user.email}

@@ -1,5 +1,6 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required
 from models import db, Routine
 
 ns_routine = Namespace('Routine', description='Routine operations')
@@ -13,11 +14,13 @@ routine_model = ns_routine.model('RoutineRequest', {
 @ns_routine.route('/')
 class RoutineList(Resource):
     @ns_routine.marshal_list_with(routine_model)
+    @jwt_required()
     def get(self):
         routines = Routine.query.all()
         return routines
 
     @ns_routine.expect(routine_model)
+    @jwt_required()
     def post(self):
         data = request.get_json()
         new_routine = Routine(name=data['name'], description=data['description'], category_id=data['categoryId'])
@@ -28,11 +31,13 @@ class RoutineList(Resource):
 @ns_routine.route('/<int:id>')
 class RoutineById(Resource):
     @ns_routine.marshal_with(routine_model)
+    @jwt_required()
     def get(self, id):
         routine = Routine.query.get_or_404(id)
         return routine
 
     @ns_routine.expect(routine_model)
+    @jwt_required()
     def put(self, id):
         data = request.get_json()
         routine = Routine.query.get_or_404(id)
@@ -42,6 +47,7 @@ class RoutineById(Resource):
         db.session.commit()
         return {'message': 'Update routine successful'}
 
+    @jwt_required()
     def delete(self, id):
         routine = Routine.query.get_or_404(id)
         db.session.delete(routine)
