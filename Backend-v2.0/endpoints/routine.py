@@ -3,7 +3,7 @@ from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required
 from models import db, Routine
 
-ns_routine = Namespace('Routine', description='Routine operations')
+ns_routine = Namespace('Routine', description='Routine operations', path='/api/Routine')
 
 routine_model = ns_routine.model('RoutineRequest', {
     'name': fields.String(required=True, description='The routine name'),

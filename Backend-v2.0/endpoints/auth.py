@@ -9,7 +9,7 @@ from models import db, User
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-ns_auth = Namespace('Auth', description='Authentication operations')
+ns_auth = Namespace('Auth', description='Authentication operations', path='/api/Auth')
 
 login_model = ns_auth.model('LoginRequest', {
     'email': fields.String(required=True, description='The user email'),

@@ -3,7 +3,7 @@ from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required
 from models import db, Exercise
 
-ns_exercise = Namespace('Exercise', description='Exercise operations')
+ns_exercise = Namespace('Exercise', description='Exercise operations', path='/api/Exercise')
 
 exercise_model = ns_exercise.model('ExerciseRequest', {
     'name': fields.String(required=True, description='The exercise name'),

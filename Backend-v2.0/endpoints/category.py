@@ -3,7 +3,7 @@ from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required
 from models import db, Category
 
-ns_category = Namespace('Category', description='Category operations')
+ns_category = Namespace('Category', description='Category operations', path='/api/Category')
 
 category_model = ns_category.model('CategoryRequest', {
     'name': fields.String(required=True, description='The category name'),
