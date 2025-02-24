@@ -5,7 +5,7 @@ class NetworkManager {
 
     private init() {}
 
-    private let baseUrl = "https://backend.wo.marijndemul.nl"
+    private let baseUrl = "https://pyworkout.backend.marijndemul.nl"
     public var authToken: String?
 
     func setAuthToken(_ token: String?) {
