@@ -1,4 +1,5 @@
-from flask import Flask
+import logging
+from flask import Flask, request
 from flask_restx import Api
 from flask_jwt_extended import JWTManager
 from models import db
@@ -6,6 +7,9 @@ from endpoints.auth import ns_auth
 from endpoints.category import ns_category
 from endpoints.exercise import ns_exercise
 from endpoints.routine import ns_routine
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://workout:workout@192.168.178.228:3502/workout'
@@ -21,6 +25,18 @@ api.add_namespace(ns_auth)
 api.add_namespace(ns_category)
 api.add_namespace(ns_exercise)
 api.add_namespace(ns_routine)
+
+@app.before_request
+def log_request_info():
+    logger.debug(f"Request Headers: {request.headers}")
+    logger.debug(f"Request Body: {request.get_data()}")
+
+@app.after_request
+def log_response_info(response):
+    logger.debug(f"Response Status: {response.status}")
+    logger.debug(f"Response Headers: {response.headers}")
+    logger.debug(f"Response Body: {response.get_data()}")
+    return response
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
