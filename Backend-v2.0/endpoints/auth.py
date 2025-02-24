@@ -26,7 +26,7 @@ class Login(Resource):
         user = User.query.filter_by(email=data['email']).first()
         if user and check_password_hash(user.password, data['password']):
             access_token = create_access_token(identity=user.id)
-            return {'message': 'Login successful', 'access_token': access_token}
+            return {'message': 'Login successful', 'token': access_token}
         return {'message': 'Invalid credentials'}, 401
 
 @ns_auth.route('/register')

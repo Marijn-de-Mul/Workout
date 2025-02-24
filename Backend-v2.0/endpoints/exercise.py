@@ -24,7 +24,7 @@ class ExerciseList(Resource):
     @jwt_required()
     def post(self):
         data = request.get_json()
-        new_exercise = Exercise(name=data['name'], description=data['description'], routine_id=data['routineId'])
+        new_exercise = Exercise(name=data['name'], description=data['description'], routine_id=data['routineId'], category_id=data['categoryId'])
         db.session.add(new_exercise)
         db.session.commit()
         return {'message': 'Create exercise successful'}
@@ -45,6 +45,7 @@ class ExerciseById(Resource):
         exercise.name = data['name']
         exercise.description = data['description']
         exercise.routine_id = data['routineId']
+        exercise.category_id = data['categoryId']
         db.session.commit()
         return {'message': 'Update exercise successful'}
 
