@@ -36,7 +36,7 @@ class Register(Resource):
         data = request.get_json()
         if data['password'] != data['confirmPassword']:
             return {'message': 'Passwords do not match'}, 400
-        hashed_password = generate_password_hash(data['password'], method='sha256')
+        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
         new_user = User(username=data['username'], email=data['email'], password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
