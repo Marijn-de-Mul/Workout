@@ -47,5 +47,4 @@ def log_response_info(response):
     return response
 
 if __name__ == '__main__':
-    ssl_context = ('cert.pem', 'key.pem')
-    app.run(host="0.0.0.0", port=5000, ssl_context=ssl_context, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
