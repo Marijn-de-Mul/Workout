@@ -10,6 +10,7 @@ from endpoints.auth import router as auth_router
 from endpoints.category import router as category_router
 from endpoints.exercise import router as exercise_router
 from endpoints.routine import router as routine_router
+from config import settings
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -28,9 +29,7 @@ Base.metadata.create_all(bind=engine)
 
 @AuthJWT.load_config
 def get_config():
-    return {
-        "authjwt_secret_key": "ya172914d82aa8cc99c5e5ae937acfdfbd6144a0291bf978fc63ce0656aaa89787dc0bafcb5cae384990acc2434f1311840524a71cb7dff644b4bce60bf7f19a32869b62d7b63eba48442b0757a77524b931996181c1dd910bbfdcb3a5bdb6acddfc29be08522eee645a7cace12937133f4b1052a7a6ae198c03563fe1dc169316a1bca94787a17ee8dc8dadac3fd3bc4cc28408a00969cf71884828dd8ccb1fd4a3ec0a9bc869e88ab19f3037e6079011dc0d01edb445cf2ee4b3fa1417d03a42dc071b8c9ec710cb6a7dd63c1241de94b0fbb9267e22d080cdc9cb48d95e52929ec8c955d10503aa4b5a5aa09325dcbf2af5f885d8ee7b38c0a0cc990905efd"
-    }
+    return settings
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
