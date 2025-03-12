@@ -6,3 +6,4 @@ mysql-connector-python
 Werkzeug
 flask-restx
 flask-jwt-extended
+fastapi 
