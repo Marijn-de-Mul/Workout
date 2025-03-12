@@ -31,32 +31,29 @@ Base.metadata.create_all(bind=engine)
 def get_config():
     return settings
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.debug(f"Request Headers: {request.headers}")
-    logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-    logger.debug(f"Request Body: {await request.body()}")
-    response = await call_next(request)
-    logger.debug(f"Response Status: {response.status_code}")
-    logger.debug(f"Response Headers: {response.headers}")
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     logger.debug(f"Request Headers: {request.headers}")
+#     logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
+#     logger.debug(f"Request Body: {await request.body()}")
+#     response = await call_next(request)
+#     logger.debug(f"Response Status: {response.status_code}")
+#     logger.debug(f"Response Headers: {response.headers}")
     
-    try:
-        # Collect the full response body from the asynchronous iterator
-        response_body = b""
-        async for chunk in response.body_iterator:
-            response_body += chunk
-        logger.debug(f"Response Body: {response_body.decode('utf-8')}")
+#     try:
+#         response_body = b""
+#         async for chunk in response.body_iterator:
+#             response_body += chunk
+#         logger.debug(f"Response Body: {response_body.decode('utf-8')}")
 
-        # Define a new asynchronous iterator that yields the full body
-        async def new_body_iterator():
-            yield response_body
+#         async def new_body_iterator():
+#             yield response_body
 
-        # Reassign the body_iterator so that the response remains unaltered
-        response.body_iterator = new_body_iterator()
-    except Exception as e:
-        logger.error(f"Error logging response body: {e}")
+#         response.body_iterator = new_body_iterator()
+#     except Exception as e:
+#         logger.error(f"Error logging response body: {e}")
     
-    return response
+#     return response
 
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
