@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    image: marijndemul16/workout.backend:latest
+    ports:
+      - "5000:5000"
+    networks:
+      - workout-backend-network
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: workoutdb
+      MYSQL_USER: workoutuser
+      MYSQL_PASSWORD: workoutpassword
+    ports:
+      - "3502:3306"
+    networks:
+      - workout-backend-network
+
+networks:
+  workout-backend-network:
+    driver: bridge
