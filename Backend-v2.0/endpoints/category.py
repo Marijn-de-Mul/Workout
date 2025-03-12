@@ -22,7 +22,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get('/', response_model=list[CategoryRequest])
+@router.get('/get', response_model=list[CategoryRequest])
 def get_categories(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -30,7 +30,7 @@ def get_categories(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)
     categories = db.query(Category).all()
     return categories
 
-@router.post('/')
+@router.post('/post')
 def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -41,7 +41,7 @@ def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), d
     db.refresh(new_category)
     return {'message': 'Create category successful'}
 
-@router.get('/{id}', response_model=CategoryRequest)
+@router.get('/get/{id}', response_model=CategoryRequest)
 def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -52,7 +52,7 @@ def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(
         raise HTTPException(status_code=404, detail="Category not found")
     return category
 
-@router.put('/{id}')
+@router.put('/put/{id}')
 def update_category(id: int, category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -68,7 +68,7 @@ def update_category(id: int, category: CategoryRequest, Authorize: AuthJWT = Dep
     db.refresh(db_category)
     return {'message': 'Update category successful'}
 
-@router.delete('/{id}')
+@router.delete('/delete/{id}')
 def delete_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()

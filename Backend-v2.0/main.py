@@ -59,10 +59,10 @@ def get_config():
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
-app.include_router(auth_router, prefix="/api/Auth/")
-app.include_router(category_router, prefix="/api/Category/")
-app.include_router(exercise_router, prefix="/api/Exercise/")
-app.include_router(routine_router, prefix="/api/Routine/")
+app.include_router(auth_router, prefix="/api/Auth")
+app.include_router(category_router, prefix="/api/Category")
+app.include_router(exercise_router, prefix="/api/Exercise")
+app.include_router(routine_router, prefix="/api/Routine")
 
 if __name__ == '__main__':
     import uvicorn

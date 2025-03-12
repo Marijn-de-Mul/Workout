@@ -23,7 +23,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get('/', response_model=list[ExerciseRequest])
+@router.get('/get', response_model=list[ExerciseRequest])
 def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -31,7 +31,7 @@ def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db))
     exercises = db.query(Exercise).all()
     return exercises
 
-@router.post('/')
+@router.post('/post')
 def create_exercise(exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -42,7 +42,7 @@ def create_exercise(exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), d
     db.refresh(new_exercise)
     return {'message': 'Create exercise successful'}
 
-@router.get('/{id}', response_model=ExerciseRequest)
+@router.get('/get/{id}', response_model=ExerciseRequest)
 def get_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -53,7 +53,7 @@ def get_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(
         raise HTTPException(status_code=404, detail="Exercise not found")
     return exercise
 
-@router.put('/{id}')
+@router.put('/put/{id}')
 def update_exercise(id: int, exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -70,7 +70,7 @@ def update_exercise(id: int, exercise: ExerciseRequest, Authorize: AuthJWT = Dep
     db.refresh(db_exercise)
     return {'message': 'Update exercise successful'}
 
-@router.delete('/{id}')
+@router.delete('/delete/{id}')
 def delete_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()

@@ -22,7 +22,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get('/', response_model=list[RoutineRequest])
+@router.get('/get', response_model=list[RoutineRequest])
 def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -30,7 +30,7 @@ def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     routines = db.query(Routine).all()
     return routines
 
-@router.post('/')
+@router.post('/post')
 def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -41,7 +41,7 @@ def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: 
     db.refresh(new_routine)
     return {'message': 'Create routine successful'}
 
-@router.get('/{id}', response_model=RoutineRequest)
+@router.get('/get/{id}', response_model=RoutineRequest)
 def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -52,7 +52,7 @@ def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Routine not found")
     return routine
 
-@router.put('/{id}')
+@router.put('/put/{id}')
 def update_routine(id: int, routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -68,7 +68,7 @@ def update_routine(id: int, routine: RoutineRequest, Authorize: AuthJWT = Depend
     db.refresh(db_routine)
     return {'message': 'Update routine successful'}
 
-@router.delete('/{id}')
+@router.delete('/delete/{id}')
 def delete_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
