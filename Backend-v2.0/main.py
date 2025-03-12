@@ -59,9 +59,6 @@ async def log_requests(request: Request, call_next):
     except Exception as e:
         logger.error(f"Error logging response body: {e}")
         return response
-``` 
-
-This middleware logs the request and response details, assembles the body from the response iterator, and then returns a new Response with the same status, headers, and content.
 
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
