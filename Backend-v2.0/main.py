@@ -39,20 +39,23 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     logger.debug(f"Response Status: {response.status_code}")
     logger.debug(f"Response Headers: {response.headers}")
-
-    if isinstance(response, Response):
+    
+    try:
+        # Collect the full response body from the asynchronous iterator
         response_body = b""
         async for chunk in response.body_iterator:
             response_body += chunk
         logger.debug(f"Response Body: {response_body.decode('utf-8')}")
-        response.body_iterator = iter([response_body])
-    elif isinstance(response, StreamingResponse):
-        response_body = b""
-        async for chunk in response.body_iterator:
-            response_body += chunk
-        logger.debug(f"Response Body: {response_body.decode('utf-8')}")
-        response.body_iterator = iter([response_body])
 
+        # Define a new asynchronous iterator that yields the full body
+        async def new_body_iterator():
+            yield response_body
+
+        # Reassign the body_iterator so that the response remains unaltered
+        response.body_iterator = new_body_iterator()
+    except Exception as e:
+        logger.error(f"Error logging response body: {e}")
+    
     return response
 
 @app.exception_handler(AuthJWTException)
