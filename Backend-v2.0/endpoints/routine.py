@@ -11,11 +11,26 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+class RoutineCategoryResponseModel(BaseModel):
+    routineId: int
+    categoryId: int
+
+    class Config:
+        orm_mode = True
+
+class RoutineCategoriesResponse(BaseModel):
+    values: List[RoutineCategoryResponseModel] = Field(..., alias="$values")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
+
 class RoutineResponseModel(BaseModel):
     id: int
+    userId: str         # Swift expects a userId; using empty string if not provided
     name: str
-    description: Optional[str] = None
-    categoryId: Optional[int] = None  
+    description: str
+    routineCategories: Optional[RoutineCategoriesResponse] = None
 
     class Config:
         orm_mode = True
@@ -35,28 +50,42 @@ def get_db():
     finally:
         db.close()
 
+# Helper function to convert SQLAlchemy Routine to routine response
+def routine_to_response(routine: Routine) -> RoutineResponseModel:
+    return RoutineResponseModel(
+        id=routine.id,
+        userId=getattr(routine, "userId", ""),  # Use actual userId if your model has it, else empty string
+        name=routine.name,
+        description=routine.description,
+        routineCategories=RoutineCategoriesResponse(values=routine.categories) if routine.categories else None
+    )
+
 @router.get('/get', response_model=RoutinesListResponse)
 def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching routines for user id: {current_user_id}")
     routines = db.query(Routine).all()
-    return RoutinesListResponse(id="routineResponse", values=routines).dict(by_alias=True)
+    response = [routine_to_response(r) for r in routines]
+    return RoutinesListResponse(id="routineResponse", values=response).dict(by_alias=True)
 
 @router.post('/post', response_model=RoutineResponseModel)
 def create_routine(routine: RoutineResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new routine for user id: {current_user_id}")
+    # Create new Routine; note: userId is not in your SQLAlchemy Routine so we ignore it
     new_routine = Routine(
         name=routine.name,
         description=routine.description,
+        # Assuming your Routine model has a column "category_id" corresponding to categoryId;
+        # adjust as needed.
         category_id=routine.categoryId  
     )
     db.add(new_routine)
     db.commit()
     db.refresh(new_routine)
-    return new_routine
+    return routine_to_response(new_routine)
 
 @router.get('/get/{id}', response_model=RoutineResponseModel)
 def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
@@ -67,7 +96,7 @@ def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(g
     if not routine:
         logger.debug("Routine not found")
         raise HTTPException(status_code=404, detail="Routine not found")
-    return routine
+    return routine_to_response(routine)
 
 @router.put('/put/{id}', response_model=RoutineResponseModel)
 def update_routine(id: int, routine: RoutineResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
@@ -83,7 +112,7 @@ def update_routine(id: int, routine: RoutineResponseModel, Authorize: AuthJWT = 
     db_routine.category_id = routine.categoryId
     db.commit()
     db.refresh(db_routine)
-    return db_routine
+    return routine_to_response(db_routine)
 
 @router.delete('/delete/{id}')
 def delete_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):

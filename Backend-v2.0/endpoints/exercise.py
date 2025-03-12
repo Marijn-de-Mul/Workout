@@ -13,9 +13,10 @@ router = APIRouter()
 
 class ExerciseResponseModel(BaseModel):
     id: int
+    userId: str
+    routineId: int
     name: str
     description: Optional[str] = None
-    routine_id: int
 
     class Config:
         orm_mode = True
@@ -35,13 +36,24 @@ def get_db():
     finally:
         db.close()
 
+# Helper to convert the SQLAlchemy Exercise into our response model.
+def exercise_to_response(exercise: Exercise, user_id: str = "") -> ExerciseResponseModel:
+    return ExerciseResponseModel(
+        id=exercise.id,
+        userId=user_id,
+        routineId=exercise.routine_id,
+        name=exercise.name,
+        description=exercise.description
+    )
+
 @router.get('/get', response_model=ExercisesListResponse)
 def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching exercises for user id: {current_user_id}")
     exercises = db.query(Exercise).all()
-    return ExercisesListResponse(id="exerciseResponse", values=exercises).dict(by_alias=True)
+    response = [exercise_to_response(e, current_user_id) for e in exercises]
+    return ExercisesListResponse(id="exerciseResponse", values=response).dict(by_alias=True)
 
 @router.post('/post', response_model=ExerciseResponseModel)
 def create_exercise(exercise: ExerciseResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
@@ -51,12 +63,12 @@ def create_exercise(exercise: ExerciseResponseModel, Authorize: AuthJWT = Depend
     new_exercise = Exercise(
         name=exercise.name,
         description=exercise.description,
-        routine_id=exercise.routine_id
+        routine_id=exercise.routineId
     )
     db.add(new_exercise)
     db.commit()
     db.refresh(new_exercise)
-    return new_exercise
+    return exercise_to_response(new_exercise, current_user_id)
 
 @router.get('/get/{id}', response_model=ExerciseResponseModel)
 def get_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
@@ -67,7 +79,7 @@ def get_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(
     if not exercise:
         logger.debug("Exercise not found")
         raise HTTPException(status_code=404, detail="Exercise not found")
-    return exercise
+    return exercise_to_response(exercise, current_user_id)
 
 @router.put('/put/{id}', response_model=ExerciseResponseModel)
 def update_exercise(id: int, exercise: ExerciseResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
@@ -80,10 +92,10 @@ def update_exercise(id: int, exercise: ExerciseResponseModel, Authorize: AuthJWT
         raise HTTPException(status_code=404, detail="Exercise not found")
     db_exercise.name = exercise.name
     db_exercise.description = exercise.description
-    db_exercise.routine_id = exercise.routine_id
+    db_exercise.routine_id = exercise.routineId
     db.commit()
     db.refresh(db_exercise)
-    return db_exercise
+    return exercise_to_response(db_exercise, current_user_id)
 
 @router.delete('/delete/{id}')
 def delete_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
