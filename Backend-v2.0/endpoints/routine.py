@@ -1,7 +1,8 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_jwt_auth import AuthJWT
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from models import Routine, SessionLocal
 
@@ -10,13 +11,22 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-class RoutineRequest(BaseModel):
+class RoutineResponseModel(BaseModel):
+    id: int
     name: str
-    description: str = None
-    categoryId: int  # Ensure your Routine model has a matching "category_id" column
+    description: Optional[str] = None
+    categoryId: Optional[int] = None  
 
     class Config:
         orm_mode = True
+
+class RoutinesListResponse(BaseModel):
+    id: str = Field("routineResponse", alias="$id")
+    values: List[RoutineResponseModel] = Field(..., alias="$values")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
 
 def get_db():
     db = SessionLocal()
@@ -25,30 +35,30 @@ def get_db():
     finally:
         db.close()
 
-@router.get('/get', response_model=list[RoutineRequest])
+@router.get('/get', response_model=RoutinesListResponse)
 def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching routines for user id: {current_user_id}")
     routines = db.query(Routine).all()
-    return routines
+    return RoutinesListResponse(id="routineResponse", values=routines).dict(by_alias=True)
 
-@router.post('/post', response_model=RoutineRequest)
-def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+@router.post('/post', response_model=RoutineResponseModel)
+def create_routine(routine: RoutineResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new routine for user id: {current_user_id}")
     new_routine = Routine(
         name=routine.name,
         description=routine.description,
-        category_id=routine.categoryId  # This field must exist in your Routine model
+        category_id=routine.categoryId  
     )
     db.add(new_routine)
     db.commit()
     db.refresh(new_routine)
     return new_routine
 
-@router.get('/get/{id}', response_model=RoutineRequest)
+@router.get('/get/{id}', response_model=RoutineResponseModel)
 def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -59,8 +69,8 @@ def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Routine not found")
     return routine
 
-@router.put('/put/{id}', response_model=RoutineRequest)
-def update_routine(id: int, routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+@router.put('/put/{id}', response_model=RoutineResponseModel)
+def update_routine(id: int, routine: RoutineResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Updating routine with id {id} for user id: {current_user_id}")
