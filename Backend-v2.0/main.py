@@ -39,11 +39,14 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     logger.debug(f"Response Status: {response.status_code}")
     logger.debug(f"Response Headers: {response.headers}")
+    
     if isinstance(response, Response):
         response_body = b""
         async for chunk in response.body_iterator:
             response_body += chunk
         logger.debug(f"Response Body: {response_body.decode('utf-8')}")
+        response.body_iterator = iter([response_body])
+    
     return response
 
 @app.exception_handler(AuthJWTException)
