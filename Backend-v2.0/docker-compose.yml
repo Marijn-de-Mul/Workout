@@ -14,14 +14,19 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: workoutdb
-      MYSQL_USER: workoutuser
-      MYSQL_PASSWORD: workoutpassword
+      MYSQL_DATABASE: workout
+      MYSQL_USER: workout
+      MYSQL_PASSWORD: workout
     ports:
       - "3502:3306"
     networks:
       - workout-backend-network
+    volumes:
+      - workout_db_data:/var/lib/mysql
 
 networks:
   workout-backend-network:
     driver: bridge
+
+volumes:
+  workout_db_data:

@@ -1,9 +1,6 @@
-Flask
-flasgger
-Flask-SQLAlchemy
-SQLAlchemy
-mysql-connector-python
-Werkzeug
-flask-restx
-flask-jwt-extended
-fastapi 
+fastapi==0.95.0
+uvicorn==0.22.0
+sqlalchemy==1.4.46
+mysql-connector-python==8.0.33
+fastapi-jwt-auth==0.5.0
+pydantic==1.10.2
