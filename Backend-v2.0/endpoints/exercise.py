@@ -2,7 +2,6 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
-from typing import List
 from sqlalchemy.orm import Session
 from models import Exercise, SessionLocal
 
@@ -14,7 +13,8 @@ router = APIRouter()
 class ExerciseRequest(BaseModel):
     name: str
     description: str = None
-    routine_id: int
+    routineId: int
+    categoryId: int
 
     class Config:
         orm_mode = True
@@ -26,7 +26,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get('/get', response_model=List[ExerciseRequest])
+@router.get('/get', response_model=list[ExerciseRequest])
 def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -40,9 +40,10 @@ def create_exercise(exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), d
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new exercise for user id: {current_user_id}")
     new_exercise = Exercise(
-        name=exercise.name,
-        description=exercise.description,
-        routine_id=exercise.routine_id
+        name=exercise.name, 
+        description=exercise.description, 
+        routine_id=exercise.routineId, 
+        category_id=exercise.categoryId
     )
     db.add(new_exercise)
     db.commit()
@@ -71,7 +72,8 @@ def update_exercise(id: int, exercise: ExerciseRequest, Authorize: AuthJWT = Dep
         raise HTTPException(status_code=404, detail="Exercise not found")
     db_exercise.name = exercise.name
     db_exercise.description = exercise.description
-    db_exercise.routine_id = exercise.routine_id
+    db_exercise.routine_id = exercise.routineId
+    db_exercise.category_id = exercise.categoryId
     db.commit()
     db.refresh(db_exercise)
     return db_exercise

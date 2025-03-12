@@ -13,7 +13,7 @@ router = APIRouter()
 class RoutineRequest(BaseModel):
     name: str
     description: str = None
-    categoryId: int  # Ensure your Routine model has a matching "category_id" column
+    categoryId: int
 
     class Config:
         orm_mode = True
@@ -41,7 +41,7 @@ def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: 
     new_routine = Routine(
         name=routine.name,
         description=routine.description,
-        category_id=routine.categoryId  # This field must exist in your Routine model
+        category_id=routine.categoryId
     )
     db.add(new_routine)
     db.commit()
