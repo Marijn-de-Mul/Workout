@@ -1,66 +1,66 @@
 import logging
-from flask import request, jsonify
-from flask_restx import Namespace, Resource, fields
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from models import db, User
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel
+from models import User, SessionLocal
 
-# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-ns_auth = Namespace('Auth', description='Authentication operations', path='/api/Auth')
+router = APIRouter()
 
-login_model = ns_auth.model('LoginRequest', {
-    'email': fields.String(required=True, description='The user email'),
-    'password': fields.String(required=True, description='The user password')
-})
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    confirmPassword: str
 
-register_model = ns_auth.model('RegisterRequest', {
-    'username': fields.String(required=True, description='The user username'),
-    'email': fields.String(required=True, description='The user email'),
-    'password': fields.String(required=True, description='The user password'),
-    'confirmPassword': fields.String(required=True, description='The user password confirmation')
-})
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
-@ns_auth.route('/login')
-class Login(Resource):
-    @ns_auth.expect(login_model)
-    def post(self):
-        data = request.get_json()
-        logger.debug(f"Login attempt with email: {data['email']}")
-        user = User.query.filter_by(email=data['email']).first()
-        if user and check_password_hash(user.password, data['password']):
-            access_token = create_access_token(identity=str(user.id))
-            logger.debug(f"Login successful for user id: {user.id}")
-            return {'message': 'Login successful', 'token': access_token}
-        logger.debug("Invalid credentials")
-        return {'message': 'Invalid credentials'}, 401
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@ns_auth.route('/register')
-class Register(Resource):
-    @ns_auth.expect(register_model)
-    def post(self):
-        data = request.get_json()
-        logger.debug(f"Registration attempt with email: {data['email']}")
-        if data['password'] != data['confirmPassword']:
-            logger.debug("Passwords do not match")
-            return {'message': 'Passwords do not match'}, 400
-        hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
-        new_user = User(username=data['username'], email=data['email'], password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        logger.debug(f"Registration successful for user id: {new_user.id}")
-        return {'message': 'Registration successful'}
+@router.post('/login')
+def login(user: UserLogin, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    logger.debug(f"Login attempt with email: {user.email}")
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if db_user and check_password_hash(db_user.password, user.password):
+        access_token = Authorize.create_access_token(identity=str(db_user.id))
+        logger.debug(f"Login successful for user id: {db_user.id}")
+        return {'message': 'Login successful', 'token': access_token}
+    logger.debug("Invalid credentials")
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
-@ns_auth.route('/me')
-class GetMe(Resource):
-    @jwt_required()
-    def get(self):
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Fetching user info for user id: {current_user_id}")
-        user = User.query.get(current_user_id)
-        if user:
-            return {'username': user.username, 'email': user.email}
-        logger.debug("User not found")
-        return {'message': 'User not found'}, 404
+@router.post('/register')
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    logger.debug(f"Registration attempt with email: {user.email}")
+    if user.password != user.confirmPassword:
+        logger.debug("Passwords do not match")
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    hashed_password = generate_password_hash(user.password, method='pbkdf2:sha256')
+    new_user = User(username=user.username, email=user.email, password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    logger.debug(f"Registration successful for user id: {new_user.id}")
+    return {'message': 'Registration successful'}
+
+@router.get('/me')
+def get_me(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Fetching user info for user id: {current_user_id}")
+    user = db.query(User).get(current_user_id)
+    if user:
+        return {'username': user.username, 'email': user.email}
+    logger.debug("User not found")
+    raise HTTPException(status_code=404, detail="User not found")

@@ -1,44 +1,46 @@
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-db = SQLAlchemy()
+Base = declarative_base()
 
-class User(db.Model):
+class User(Base):
     __tablename__ = 'Users'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(80), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    password = Column(String(120), nullable=False)
 
-class Category(db.Model):
+class Category(Base):
     __tablename__ = 'Categories'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.String(200))
-    type = db.Column(db.String(80))
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(80), nullable=False)
+    description = Column(String(200))
+    type = Column(String(80))
 
-class ExerciseCategory(db.Model):
+class ExerciseCategory(Base):
     __tablename__ = 'ExerciseCategories'
-    id = db.Column(db.Integer, primary_key=True)
-    exercise_id = db.Column(db.Integer, db.ForeignKey('Exercises.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('Categories.id'), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    exercise_id = Column(Integer, ForeignKey('Exercises.id'), nullable=False)
+    category_id = Column(Integer, ForeignKey('Categories.id'), nullable=False)
 
-class Exercise(db.Model):
+class Exercise(Base):
     __tablename__ = 'Exercises'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.String(200))
-    routine_id = db.Column(db.Integer, db.ForeignKey('Routines.id'), nullable=False)
-    categories = db.relationship('ExerciseCategory', backref='exercise', lazy=True)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(80), nullable=False)
+    description = Column(String(200))
+    routine_id = Column(Integer, ForeignKey('Routines.id'), nullable=False)
+    categories = relationship('ExerciseCategory', backref='exercise', lazy=True)
 
-class RoutineCategory(db.Model):
+class RoutineCategory(Base):
     __tablename__ = 'RoutineCategories'
-    id = db.Column(db.Integer, primary_key=True)
-    routine_id = db.Column(db.Integer, db.ForeignKey('Routines.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('Categories.id'), nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    routine_id = Column(Integer, ForeignKey('Routines.id'), nullable=False)
+    category_id = Column(Integer, ForeignKey('Categories.id'), nullable=False)
 
-class Routine(db.Model):
+class Routine(Base):
     __tablename__ = 'Routines'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.String(200))
-    categories = db.relationship('RoutineCategory', backref='routine', lazy=True)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(80), nullable=False)
+    description = Column(String(200))
+    categories = relationship('RoutineCategory', backref='routine', lazy=True)

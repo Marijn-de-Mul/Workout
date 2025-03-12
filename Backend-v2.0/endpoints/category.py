@@ -1,74 +1,82 @@
 import logging
-from flask import request
-from flask_restx import Namespace, Resource, fields
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Category
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from models import Category, SessionLocal
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-ns_category = Namespace('Category', description='Category operations', path='/api/Category')
+router = APIRouter()
 
-category_model = ns_category.model('CategoryRequest', {
-    'name': fields.String(required=True, description='The category name'),
-    'description': fields.String(description='The category description'),
-    'type': fields.String(description='The category type')
-})
+class CategoryRequest(BaseModel):
+    name: str
+    description: str = None
+    type: str = None
 
-@ns_category.route('/')
-class CategoryList(Resource):
-    @ns_category.marshal_list_with(category_model)
-    @jwt_required()
-    def get(self):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Fetching categories for user id: {current_user_id}")
-        categories = Category.query.all()
-        return categories
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    @ns_category.expect(category_model)
-    @jwt_required()
-    def post(self):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Creating a new category for user id: {current_user_id}")
-        data = request.get_json()
-        new_category = Category(name=data['name'], description=data['description'], type=data['type'])
-        db.session.add(new_category)
-        db.session.commit()
-        return {'message': 'Create category successful'}
+@router.get('/', response_model=list[CategoryRequest])
+def get_categories(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Fetching categories for user id: {current_user_id}")
+    categories = db.query(Category).all()
+    return categories
 
-@ns_category.route('/<int:id>')
-class CategoryById(Resource):
-    @ns_category.marshal_with(category_model)
-    @jwt_required()
-    def get(self, id):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Fetching category with id {id} for user id: {current_user_id}")
-        category = Category.query.get_or_404(id)
-        return category
+@router.post('/')
+def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Creating a new category for user id: {current_user_id}")
+    new_category = Category(name=category.name, description=category.description, type=category.type)
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+    return {'message': 'Create category successful'}
 
-    @ns_category.expect(category_model)
-    @jwt_required()
-    def put(self, id):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Updating category with id {id} for user id: {current_user_id}")
-        data = request.get_json()
-        category = Category.query.get_or_404(id)
-        category.name = data['name']
-        category.description = data['description']
-        category.type = data['type']
-        db.session.commit()
-        return {'message': 'Update category successful'}
+@router.get('/{id}', response_model=CategoryRequest)
+def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Fetching category with id {id} for user id: {current_user_id}")
+    category = db.query(Category).get(id)
+    if not category:
+        logger.debug("Category not found")
+        raise HTTPException(status_code=404, detail="Category not found")
+    return category
 
-    @jwt_required()
-    def delete(self, id):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Deleting category with id {id} for user id: {current_user_id}")
-        category = Category.query.get_or_404(id)
-        db.session.delete(category)
-        db.session.commit()
-        return {'message': 'Delete category successful'}
+@router.put('/{id}')
+def update_category(id: int, category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Updating category with id {id} for user id: {current_user_id}")
+    db_category = db.query(Category).get(id)
+    if not db_category:
+        logger.debug("Category not found")
+        raise HTTPException(status_code=404, detail="Category not found")
+    db_category.name = category.name
+    db_category.description = category.description
+    db_category.type = category.type
+    db.commit()
+    db.refresh(db_category)
+    return {'message': 'Update category successful'}
+
+@router.delete('/{id}')
+def delete_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Deleting category with id {id} for user id: {current_user_id}")
+    category = db.query(Category).get(id)
+    if not category:
+        logger.debug("Category not found")
+        raise HTTPException(status_code=404, detail="Category not found")
+    db.delete(category)
+    db.commit()
+    return {'message': 'Delete category successful'}

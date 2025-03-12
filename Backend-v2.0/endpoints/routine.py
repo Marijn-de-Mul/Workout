@@ -1,74 +1,82 @@
 import logging
-from flask import request
-from flask_restx import Namespace, Resource, fields
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Routine
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from models import Routine, SessionLocal
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-ns_routine = Namespace('Routine', description='Routine operations', path='/api/Routine')
+router = APIRouter()
 
-routine_model = ns_routine.model('RoutineRequest', {
-    'name': fields.String(required=True, description='The routine name'),
-    'description': fields.String(description='The routine description'),
-    'categoryId': fields.Integer(required=True, description='The category ID')
-})
+class RoutineRequest(BaseModel):
+    name: str
+    description: str = None
+    categoryId: int
 
-@ns_routine.route('/')
-class RoutineList(Resource):
-    @ns_routine.marshal_list_with(routine_model)
-    @jwt_required()
-    def get(self):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Fetching routines for user id: {current_user_id}")
-        routines = Routine.query.all()
-        return routines
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    @ns_routine.expect(routine_model)
-    @jwt_required()
-    def post(self):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Creating a new routine for user id: {current_user_id}")
-        data = request.get_json()
-        new_routine = Routine(name=data['name'], description=data['description'], category_id=data['categoryId'])
-        db.session.add(new_routine)
-        db.session.commit()
-        return {'message': 'Create routine successful'}
+@router.get('/', response_model=list[RoutineRequest])
+def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Fetching routines for user id: {current_user_id}")
+    routines = db.query(Routine).all()
+    return routines
 
-@ns_routine.route('/<int:id>')
-class RoutineById(Resource):
-    @ns_routine.marshal_with(routine_model)
-    @jwt_required()
-    def get(self, id):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Fetching routine with id {id} for user id: {current_user_id}")
-        routine = Routine.query.get_or_404(id)
-        return routine
+@router.post('/')
+def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Creating a new routine for user id: {current_user_id}")
+    new_routine = Routine(name=routine.name, description=routine.description, category_id=routine.categoryId)
+    db.add(new_routine)
+    db.commit()
+    db.refresh(new_routine)
+    return {'message': 'Create routine successful'}
 
-    @ns_routine.expect(routine_model)
-    @jwt_required()
-    def put(self, id):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Updating routine with id {id} for user id: {current_user_id}")
-        data = request.get_json()
-        routine = Routine.query.get_or_404(id)
-        routine.name = data['name']
-        routine.description = data['description']
-        routine.category_id = data['categoryId']
-        db.session.commit()
-        return {'message': 'Update routine successful'}
+@router.get('/{id}', response_model=RoutineRequest)
+def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Fetching routine with id {id} for user id: {current_user_id}")
+    routine = db.query(Routine).get(id)
+    if not routine:
+        logger.debug("Routine not found")
+        raise HTTPException(status_code=404, detail="Routine not found")
+    return routine
 
-    @jwt_required()
-    def delete(self, id):
-        logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-        current_user_id = get_jwt_identity()
-        logger.debug(f"Deleting routine with id {id} for user id: {current_user_id}")
-        routine = Routine.query.get_or_404(id)
-        db.session.delete(routine)
-        db.session.commit()
-        return {'message': 'Delete routine successful'}
+@router.put('/{id}')
+def update_routine(id: int, routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Updating routine with id {id} for user id: {current_user_id}")
+    db_routine = db.query(Routine).get(id)
+    if not db_routine:
+        logger.debug("Routine not found")
+        raise HTTPException(status_code=404, detail="Routine not found")
+    db_routine.name = routine.name
+    db_routine.description = routine.description
+    db_routine.category_id = routine.categoryId
+    db.commit()
+    db.refresh(db_routine)
+    return {'message': 'Update routine successful'}
+
+@router.delete('/{id}')
+def delete_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_identity()
+    logger.debug(f"Deleting routine with id {id} for user id: {current_user_id}")
+    routine = db.query(Routine).get(id)
+    if not routine:
+        logger.debug("Routine not found")
+        raise HTTPException(status_code=404, detail="Routine not found")
+    db.delete(routine)
+    db.commit()
+    return {'message': 'Delete routine successful'}
