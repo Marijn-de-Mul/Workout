@@ -18,7 +18,6 @@ class ExerciseResponseModel(BaseModel):
     routineId: int
     name: str
     description: Optional[str] = None
-    # exerciseCategories and routine can be added here if needed
 
     class Config:
         orm_mode = True
@@ -48,7 +47,7 @@ def get_db():
     finally:
         db.close()
 
-# Map SQLAlchemy Exercise to our response model. The userId is taken from the JWT.
+# Map SQLAlchemy Exercise to our response model.
 def exercise_to_response(exercise: Exercise, user_id: str = "") -> ExerciseResponseModel:
     return ExerciseResponseModel(
         id=exercise.id,
@@ -65,6 +64,7 @@ def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db))
     logger.debug(f"Fetching exercises for user id: {current_user_id}")
     exercises = db.query(Exercise).all()
     response = [exercise_to_response(e, current_user_id) for e in exercises]
+    # Returned as {"$id": "exerciseResponse", "$values": [...]} to match Swift model
     return ExercisesListResponse(id="exerciseResponse", values=response).dict(by_alias=True)
 
 @router.post('/post', response_model=ExerciseResponseModel)
