@@ -34,7 +34,7 @@ def login(user: UserLogin, Authorize: AuthJWT = Depends(), db: Session = Depends
     logger.debug(f"Login attempt with email: {user.email}")
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user and check_password_hash(db_user.password, user.password):
-        access_token = Authorize.create_access_token(identity=str(db_user.id))
+        access_token = Authorize.create_access_token(subject=str(db_user.id))
         logger.debug(f"Login successful for user id: {db_user.id}")
         return {'message': 'Login successful', 'token': access_token}
     logger.debug("Invalid credentials")
