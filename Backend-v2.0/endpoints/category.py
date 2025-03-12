@@ -1,22 +1,31 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_jwt_auth import AuthJWT
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from models import Category, SessionLocal
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
-class CategoryRequest(BaseModel):
+class CategoryResponseModel(BaseModel):
+    id: int
     name: str
-    description: str = None
-    type: str = None
+    description: Optional[str] = None
+    type: Optional[str] = None
 
     class Config:
         orm_mode = True
+
+class CategoriesListResponse(BaseModel):
+    id: str = Field("categoryResponse", alias="$id")
+    values: List[CategoryResponseModel] = Field(..., alias="$values")
+
+    class Config:
+        orm_mode = True
+        allow_population_by_field_name = True
 
 def get_db():
     db = SessionLocal()
@@ -25,16 +34,16 @@ def get_db():
     finally:
         db.close()
 
-@router.get('/get', response_model=list[CategoryRequest])
+@router.get('/get', response_model=CategoriesListResponse)
 def get_categories(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching categories for user id: {current_user_id}")
     categories = db.query(Category).all()
-    return categories
+    return CategoriesListResponse(values=categories).dict(by_alias=True)
 
-@router.post('/post', response_model=CategoryRequest)
-def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+@router.post('/post', response_model=CategoryResponseModel)
+def create_category(category: CategoryResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new category for user id: {current_user_id}")
@@ -48,7 +57,7 @@ def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), d
     db.refresh(new_category)
     return new_category
 
-@router.get('/get/{id}', response_model=CategoryRequest)
+@router.get('/get/{id}', response_model=CategoryResponseModel)
 def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
@@ -59,8 +68,8 @@ def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(
         raise HTTPException(status_code=404, detail="Category not found")
     return category
 
-@router.put('/put/{id}', response_model=CategoryRequest)
-def update_category(id: int, category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+@router.put('/put/{id}', response_model=CategoryResponseModel)
+def update_category(id: int, category: CategoryResponseModel, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
     current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Updating category with id {id} for user id: {current_user_id}")
