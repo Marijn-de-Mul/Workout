@@ -31,35 +31,35 @@ Base.metadata.create_all(bind=engine)
 def get_config():
     return settings
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logger.debug(f"Request Headers: {request.headers}")
-    logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
-    req_body = await request.body()
-    logger.debug(f"Request Body: {req_body}")
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     logger.debug(f"Request Headers: {request.headers}")
+#     logger.debug(f"Authorization Header: {request.headers.get('Authorization')}")
+#     req_body = await request.body()
+#     logger.debug(f"Request Body: {req_body}")
     
-    response = await call_next(request)
+#     response = await call_next(request)
     
-    logger.debug(f"Response Status: {response.status_code}")
-    logger.debug(f"Response Headers: {response.headers}")
+#     logger.debug(f"Response Status: {response.status_code}")
+#     logger.debug(f"Response Headers: {response.headers}")
     
-    try:
-        response_body = b""
-        async for chunk in response.body_iterator:
-            response_body += chunk
-        response_text = response_body.decode('utf-8')
-        logger.debug(f"Response Body: {response_text}")
+#     try:
+#         response_body = b""
+#         async for chunk in response.body_iterator:
+#             response_body += chunk
+#         response_text = response_body.decode('utf-8')
+#         logger.debug(f"Response Body: {response_text}")
 
-        new_response = Response(
-            content=response_body,
-            status_code=response.status_code,
-            headers=dict(response.headers),
-            media_type=response.media_type,
-        )
-        return new_response
-    except Exception as e:
-        logger.error(f"Error logging response body: {e}")
-        return response
+#         new_response = Response(
+#             content=response_body,
+#             status_code=response.status_code,
+#             headers=dict(response.headers),
+#             media_type=response.media_type,
+#         )
+#         return new_response
+#     except Exception as e:
+#         logger.error(f"Error logging response body: {e}")
+#         return response
 
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
