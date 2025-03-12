@@ -4,7 +4,7 @@ struct AccountView: View {
     @State private var userInfo: UserInfo?
     @State private var errorMessage: String?
     @Binding var isLoggedIn: Bool
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "person.circle.fill")
@@ -12,13 +12,13 @@ struct AccountView: View {
                 .frame(width: 100, height: 100)
                 .foregroundColor(.blue)
                 .padding(.top, 40)
-
+            
             Text("Account Information")
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .padding(.horizontal)
                 .multilineTextAlignment(.center)
-
+            
             if let userInfo = userInfo {
                 VStack(spacing: 10) {
                     Text("Username: \(userInfo.username)")
@@ -36,14 +36,35 @@ struct AccountView: View {
                 Text("Loading...")
                     .padding(.horizontal)
             }
-
+            
             Spacer()
-
+            
             Button(action: {
                 UserManager.shared.logout()
                 isLoggedIn = false
             }) {
                 Text("Logout")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red)
+                    .cornerRadius(10)
+                    .padding(.horizontal)
+            }
+            
+            Button(action: {
+                NetworkManager.shared.deleteAccount { result in
+                    switch result {
+                    case .success:
+                        UserManager.shared.logout()
+                        isLoggedIn = false
+                    case .failure(let error):
+                        self.errorMessage = error.localizedDescription
+                    }
+                }
+            }) {
+                Text("Delete Account")
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding()
@@ -65,6 +86,5 @@ struct AccountView: View {
                 }
             }
         }
-        .navigationTitle("Account")
     }
 }

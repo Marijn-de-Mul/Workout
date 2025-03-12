@@ -64,3 +64,17 @@ def get_me(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
         return {'username': user.username, 'email': user.email}
     logger.debug("User not found")
     raise HTTPException(status_code=404, detail="User not found")
+
+@router.delete('/delete')
+def delete_account(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+    current_user_id = Authorize.get_jwt_subject()
+    logger.debug(f"Deleting account for user id: {current_user_id}")
+    user = db.query(User).get(current_user_id)
+    if not user:
+        logger.debug("User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    logger.debug(f"User account deleted for user id: {current_user_id}")
+    return {'message': 'Account deleted successfully'}

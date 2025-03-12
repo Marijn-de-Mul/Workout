@@ -256,4 +256,23 @@ class NetworkManager {
             completion(.success(()))
         }.resume()
     }
+    
+    func deleteAccount(completion: @escaping (Result<Void, Error>) -> Void) {
+        let request = createRequest(endpoint: "/api/Auth/delete", method: "DELETE")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to delete account"])
+                completion(.failure(error))
+                return
+            }
+            
+            completion(.success(()))
+        }.resume()
+    }
 }
