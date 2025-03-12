@@ -26,7 +26,7 @@ def get_db():
 @router.get('/', response_model=list[ExerciseRequest])
 def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching exercises for user id: {current_user_id}")
     exercises = db.query(Exercise).all()
     return exercises
@@ -34,7 +34,7 @@ def get_exercises(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db))
 @router.post('/')
 def create_exercise(exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new exercise for user id: {current_user_id}")
     new_exercise = Exercise(name=exercise.name, description=exercise.description, routine_id=exercise.routineId, category_id=exercise.categoryId)
     db.add(new_exercise)
@@ -45,7 +45,7 @@ def create_exercise(exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), d
 @router.get('/{id}', response_model=ExerciseRequest)
 def get_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching exercise with id {id} for user id: {current_user_id}")
     exercise = db.query(Exercise).get(id)
     if not exercise:
@@ -56,7 +56,7 @@ def get_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(
 @router.put('/{id}')
 def update_exercise(id: int, exercise: ExerciseRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Updating exercise with id {id} for user id: {current_user_id}")
     db_exercise = db.query(Exercise).get(id)
     if not db_exercise:
@@ -73,7 +73,7 @@ def update_exercise(id: int, exercise: ExerciseRequest, Authorize: AuthJWT = Dep
 @router.delete('/{id}')
 def delete_exercise(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Deleting exercise with id {id} for user id: {current_user_id}")
     exercise = db.query(Exercise).get(id)
     if not exercise:

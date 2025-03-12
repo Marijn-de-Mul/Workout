@@ -25,7 +25,7 @@ def get_db():
 @router.get('/', response_model=list[CategoryRequest])
 def get_categories(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching categories for user id: {current_user_id}")
     categories = db.query(Category).all()
     return categories
@@ -33,7 +33,7 @@ def get_categories(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)
 @router.post('/')
 def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new category for user id: {current_user_id}")
     new_category = Category(name=category.name, description=category.description, type=category.type)
     db.add(new_category)
@@ -44,7 +44,7 @@ def create_category(category: CategoryRequest, Authorize: AuthJWT = Depends(), d
 @router.get('/{id}', response_model=CategoryRequest)
 def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching category with id {id} for user id: {current_user_id}")
     category = db.query(Category).get(id)
     if not category:
@@ -55,7 +55,7 @@ def get_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(
 @router.put('/{id}')
 def update_category(id: int, category: CategoryRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Updating category with id {id} for user id: {current_user_id}")
     db_category = db.query(Category).get(id)
     if not db_category:
@@ -71,7 +71,7 @@ def update_category(id: int, category: CategoryRequest, Authorize: AuthJWT = Dep
 @router.delete('/{id}')
 def delete_category(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Deleting category with id {id} for user id: {current_user_id}")
     category = db.query(Category).get(id)
     if not category:

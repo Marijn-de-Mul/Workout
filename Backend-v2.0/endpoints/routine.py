@@ -25,7 +25,7 @@ def get_db():
 @router.get('/', response_model=list[RoutineRequest])
 def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching routines for user id: {current_user_id}")
     routines = db.query(Routine).all()
     return routines
@@ -33,7 +33,7 @@ def get_routines(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
 @router.post('/')
 def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Creating a new routine for user id: {current_user_id}")
     new_routine = Routine(name=routine.name, description=routine.description, category_id=routine.categoryId)
     db.add(new_routine)
@@ -44,7 +44,7 @@ def create_routine(routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: 
 @router.get('/{id}', response_model=RoutineRequest)
 def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching routine with id {id} for user id: {current_user_id}")
     routine = db.query(Routine).get(id)
     if not routine:
@@ -55,7 +55,7 @@ def get_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(g
 @router.put('/{id}')
 def update_routine(id: int, routine: RoutineRequest, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Updating routine with id {id} for user id: {current_user_id}")
     db_routine = db.query(Routine).get(id)
     if not db_routine:
@@ -71,7 +71,7 @@ def update_routine(id: int, routine: RoutineRequest, Authorize: AuthJWT = Depend
 @router.delete('/{id}')
 def delete_routine(id: int, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Deleting routine with id {id} for user id: {current_user_id}")
     routine = db.query(Routine).get(id)
     if not routine:

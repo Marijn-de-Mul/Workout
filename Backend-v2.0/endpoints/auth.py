@@ -57,7 +57,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 @router.get('/me')
 def get_me(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_required()
-    current_user_id = Authorize.get_jwt_identity()
+    current_user_id = Authorize.get_jwt_subject()
     logger.debug(f"Fetching user info for user id: {current_user_id}")
     user = db.query(User).get(current_user_id)
     if user:
