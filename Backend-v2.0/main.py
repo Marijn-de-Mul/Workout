@@ -1,6 +1,6 @@
 import logging
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from sqlalchemy import create_engine
@@ -39,7 +39,8 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     logger.debug(f"Response Status: {response.status_code}")
     logger.debug(f"Response Headers: {response.headers}")
-    logger.debug(f"Response Body: {response.body}")
+    if isinstance(response, Response):
+        logger.debug(f"Response Body: {response.body.decode('utf-8')}")
     return response
 
 @app.exception_handler(AuthJWTException)
