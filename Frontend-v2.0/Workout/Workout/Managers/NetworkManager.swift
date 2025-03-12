@@ -83,7 +83,7 @@ class NetworkManager {
     
     func addCategory(_ name: String, desc: String, type: String, completion: @escaping (Result<Category, Error>) -> Void) {
         let body: [String: Any] = ["name": name, "description": desc, "type": type]
-        let request = createRequest(endpoint: "/api/Category", method: "POST", body: body)
+        let request = createRequest(endpoint: "/api/Category/post", method: "POST", body: body)
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -106,7 +106,7 @@ class NetworkManager {
     }
     
     func fetchCategories(completion: @escaping (Result<[Category], Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Category", method: "GET")
+        let request = createRequest(endpoint: "/api/Category/get", method: "GET")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -129,7 +129,7 @@ class NetworkManager {
     }
     
     func deleteCategory(_ categoryId: Int, completion: @escaping (Result<Void, Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Category/\(categoryId)", method: "DELETE")
+        let request = createRequest(endpoint: "/api/Category/delete/\(categoryId)", method: "DELETE")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -142,7 +142,7 @@ class NetworkManager {
     }
     
     func addExercise(name: String, desc: String, categoryId: Int, routineId: Int, completion: @escaping (Result<Exercise, Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Exercise", method: "POST", body: ["name": name, "description": desc, "categoryId": categoryId, "routineId": routineId])
+        let request = createRequest(endpoint: "/api/Exercise/post", method: "POST", body: ["name": name, "description": desc, "categoryId": categoryId, "routineId": routineId])
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -165,7 +165,7 @@ class NetworkManager {
     }
     
     func getExercises(completion: @escaping (Result<[Exercise], Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Exercise", method: "GET")
+        let request = createRequest(endpoint: "/api/Exercise/get", method: "GET")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -186,7 +186,7 @@ class NetworkManager {
     }
     
     func deleteExercise(id: Int, completion: @escaping (Result<Void, Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Exercise/\(id)", method: "DELETE")
+        let request = createRequest(endpoint: "/api/Exercise/delete/\(id)", method: "DELETE")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -199,7 +199,7 @@ class NetworkManager {
     }
     
     func getRoutines(completion: @escaping (Result<[Routine], Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Routine", method: "GET")
+        let request = createRequest(endpoint: "/api/Routine/get", method: "GET")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -222,7 +222,7 @@ class NetworkManager {
     }
     
     func addRoutine(name: String, desc: String, categoryId: Int, completion: @escaping (Result<Routine, Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Routine", method: "POST", body: ["name": name, "description": desc, "categoryId": categoryId])
+        let request = createRequest(endpoint: "/api/Routine/post", method: "POST", body: ["name": name, "description": desc, "categoryId": categoryId])
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -245,7 +245,7 @@ class NetworkManager {
     }
 
     func deleteRoutine(id: Int, completion: @escaping (Result<Void, Error>) -> Void) {
-        let request = createRequest(endpoint: "/api/Routine/\(id)", method: "DELETE")
+        let request = createRequest(endpoint: "/api/Routine/delete/\(id)", method: "DELETE")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
